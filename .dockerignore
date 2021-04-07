@@ -1,0 +1,23 @@
+# Part of the source tree, but not needed to build Stoa
+.git/
+.github/
+docs/
+
+.env/
+.npm/
+
+# Dependency build files, It is installed when creating a docker image.
+node_modules/
+
+# Database files
+stoa/data/
+
+# Logging files
+stoa/logs/
+
+
+# Visual Studio Code
+.vscode/
+
+# WebStorm
+.idea/
