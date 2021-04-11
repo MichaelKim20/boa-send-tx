@@ -1,10 +1,9 @@
+import * as sdk from 'boa-sdk-ts';
+
 import { logger, Logger } from './modules/common/Logger';
 import { Config } from './modules/common/Config';
-
-import * as sdk from 'boa-sdk-ts';
+import { prepare, wait } from './modules/utils/Process';
 import { WK } from './modules/utils/WK';
-import {UnspentTxOutput} from "boa-sdk-ts/src/modules/net/response/UnspentTxOutput";
-import {KeyPair} from "boa-sdk-ts";
 
 // Create with the arguments and read from file
 let config = Config.createWithArgument();
@@ -37,21 +36,6 @@ let boa_client = new sdk.BOAClient(config.server.stoa_endpoint.toString(), confi
 
 let already_use_genesis_tx: boolean = false;
 
-function prepare (): Promise<void>
-{
-    return new Promise<void>((resolve) => {
-        sdk.SodiumHelper.init()
-            .then(() =>
-            {
-                resolve();
-            })
-            .catch((err: any) =>
-            {
-                resolve();
-            });
-    });
-}
-
 function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
 {
     return new Promise<sdk.Transaction[]>(async (resolve, reject) => {
@@ -66,7 +50,7 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                 already_use_genesis_tx = true;
                 let res: sdk.Transaction[] = [];
                 let key_count = config.process.key_count;
-                let utxos: Array<UnspentTxOutput>;
+                let utxos: Array<sdk.UnspentTxOutput>;
                 try {
                     utxos = await boa_client.getUTXOs(WK.GenesisKey.address);
                 } catch (e) {
@@ -102,7 +86,7 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                 let idx: number = 0;
                 let sources: Array<number> = [];
                 while (idx < 1) {
-                    let utxos: Array<UnspentTxOutput> = [];
+                    let utxos: Array<sdk.UnspentTxOutput> = [];
                     let source = Math.floor(Math.random() * key_count);
                     while (sources.find(value => value == source) !== undefined)
                         source = Math.floor(Math.random() * key_count);
@@ -123,7 +107,15 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                     let builder = new sdk.TxBuilder(source_key_pair);
                     let utxo_manager = new sdk.UTXOManager(utxos);
 
-                    let send_amount = sdk.JSBI.multiply(sdk.JSBI.BigInt(10000000), sdk.JSBI.BigInt(Math.floor(Math.random() * 1000)));
+                    let sum = utxo_manager.getSum()[0];
+                    if (sdk.JSBI.lessThanOrEqual(sum, sdk.JSBI.BigInt(0)))
+                        continue;
+
+                    let range = sdk.JSBI.BigInt(Math.floor(Math.random() * 50) + 20);
+                    let send_amount = sdk.JSBI.divide(sdk.JSBI.multiply(sum, range), sdk.JSBI.BigInt(100));
+
+                    logger.info(`Sender: ${source_key_pair.address.toString()}, Receiver: ${destination_key_pair.address.toString()}, amount: ${send_amount.toString()}`);
+
                     // Get UTXO for the amount to need.
                     let spent_utxos = utxo_manager.getUTXO(send_amount, height);
 
@@ -147,15 +139,6 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
             reject(e);
         }
     });
-}
-
-function wait (interval: number): Promise<void>
-{
-    return new Promise<void>((resolve) => {
-        setTimeout(() => {
-            resolve();
-        }, interval)
-    })
 }
 
 function makeBlock(): Promise<void>
