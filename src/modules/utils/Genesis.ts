@@ -14,7 +14,7 @@ export class Genesis
                 "enrollments": [
                     {
                         "utxo_key": "0x1da29910b5ed5b9ea3bd4207016f485f763b44bd289444a4cef77faa96480d6833ce0b215c3ed6e00e9119352e49bb3e04054e0fca5fef35aeb47a9e425d7ddf",
-                        "random_seed": "0x87b84a41392a6de113dfebf8374de46e5b65dcdcfbb00d49804b5b198ed984bf67d736bf26812160a6e36f02ea040d305dc2f82a5dfb7006b772da4db395eb7b",
+                        "commitment": "0x87b84a41392a6de113dfebf8374de46e5b65dcdcfbb00d49804b5b198ed984bf67d736bf26812160a6e36f02ea040d305dc2f82a5dfb7006b772da4db395eb7b",
                         "cycle_length": 20,
                         "enroll_sig": "0x7c07d85a9d03fb09b20de2cad0b37f244790e13e525ebd898caa0b5e8bc8cb68081ee969fc1360c64ad7ca923ad3fac2cbfc0b51c21581cbdc75ddb7783b9c99"
                     }
