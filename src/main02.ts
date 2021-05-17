@@ -78,7 +78,7 @@ function createTransaction (): Promise<sdk.Transaction[]>
             already_use_genesis_tx = true;
             /*
             let count = 10;
-            let utxos = await  boa_client.getUTXOs(WK.GenesisKey.address);
+            let utxos = await  boa_client.getUTXOs(WK2.GenesisKey.address);
             let manager = new sdk.UTXOManager(utxos);
             let builder = new sdk.TxBuilder(WK.GenesisKey);
             let sum: bigint = manager.getSum()[0];

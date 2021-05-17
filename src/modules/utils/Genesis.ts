@@ -84,7 +84,7 @@ export class Genesis
                             }
                         }
                     ],
-                    "payload": "",
+                    "payload": {"bytes":""},
                     "lock_height": "0"
                 },
                 {
@@ -134,7 +134,7 @@ export class Genesis
                             }
                         }
                     ],
-                    "payload": "",
+                    "payload": {"bytes":""},
                     "lock_height": "0"
                 }
             ],
@@ -144,7 +144,7 @@ export class Genesis
                 "0xb33f170692b3db7f3b172b3d2c0c6b01eef033c0b3023e36ad24adacf2bb28732caf313ed873fa9b1dcc058b198a909c065181d9eb36559c5b71c85eba7f0e34"
             ]
         }
-        ;
+    ;
 
     public static block (): Block
     {
