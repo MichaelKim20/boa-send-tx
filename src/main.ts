@@ -64,7 +64,11 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
 
                 for (let idx = 0; idx < count; idx++)
                 {
-                    let sum: sdk.JSBI = utxos[idx].amount;
+                    let tx_sz = sdk.Transaction.getEstimatedNumberOfBytes(1, tx_out_count, 0);
+                    let fees = await boa_client.getTransactionFee(tx_sz);
+                    let fee = sdk.JSBI.BigInt(fees.medium);
+
+                    let sum: sdk.JSBI = sdk.JSBI.subtract(utxos[idx].amount, fee);
                     let amount = sdk.JSBI.divide(sum, sdk.JSBI.BigInt(tx_out_count));
                     let remain = sdk.JSBI.subtract(sum, sdk.JSBI.multiply(amount, sdk.JSBI.BigInt(tx_out_count)));
 
@@ -76,7 +80,7 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                         else
                             builder.addOutput(WK.keys((idx * tx_out_count) + key_idx).address, sdk.JSBI.add(amount, remain));
                     }
-                    let tx = builder.sign(sdk.TxType.Payment);
+                    let tx = builder.sign(sdk.OutputType.Payment, fee);
                     res.push(tx);
                 }
 
@@ -113,8 +117,12 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                         WK.NODE6().address,
                         WK.NODE7().address
                     ];
-                    let idx = utxos.length-1;
-                    let sum: sdk.JSBI = utxos[idx].amount;
+                    let tx_sz = sdk.Transaction.getEstimatedNumberOfBytes(1, validators.length, 0);
+                    let fees = await boa_client.getTransactionFee(tx_sz);
+                    let fee = sdk.JSBI.BigInt(fees.medium);
+
+                    let idx = utxos.length - 1;
+                    let sum: sdk.JSBI = sdk.JSBI.subtract(utxos[idx].amount, fee);
                     let amount = sdk.JSBI.divide(sum, sdk.JSBI.BigInt(validators.length));
                     let remain = sdk.JSBI.subtract(sum, sdk.JSBI.multiply(amount, sdk.JSBI.BigInt(validators.length)));
                     let builder = new sdk.TxBuilder(WK.GenesisKey);
@@ -125,7 +133,7 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                         else
                             builder.addOutput(validators[key_idx], sdk.JSBI.add(amount, remain));
                     }
-                    let tx = builder.sign(sdk.TxType.Payment);
+                    let tx = builder.sign(sdk.OutputType.Payment, fee);
                     res.unshift(tx);
                 }
 
@@ -164,19 +172,27 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                     if (sdk.JSBI.lessThanOrEqual(sum, sdk.JSBI.BigInt(0)))
                         continue;
 
+                    let tx_sz = sdk.Transaction.getEstimatedNumberOfBytes(2, 2, 0);
+                    let fees = await boa_client.getTransactionFee(tx_sz);
+                    let fee = sdk.JSBI.BigInt(fees.medium);
+
                     let range = sdk.JSBI.BigInt(Math.floor(Math.random() * 50) + 20);
                     let send_amount = sdk.JSBI.divide(sdk.JSBI.multiply(sum, range), sdk.JSBI.BigInt(100));
 
                     logger.info(`Sender: ${source_key_pair.address.toString()}, Receiver: ${destination_key_pair.address.toString()}, amount: ${send_amount.toString()}`);
 
                     // Get UTXO for the amount to need.
-                    let spent_utxos = utxo_manager.getUTXO(send_amount, height);
-
+                    let spent_utxos = utxo_manager.getUTXO(sdk.JSBI.add(send_amount, fee), height);
                     if (spent_utxos.length > 0) {
+
+                        tx_sz = sdk.Transaction.getEstimatedNumberOfBytes(spent_utxos.length, 2, 0);
+                        fees = await boa_client.getTransactionFee(tx_sz);
+                        fee = sdk.JSBI.BigInt(fees.medium);
+
                         spent_utxos.forEach((u: sdk.UnspentTxOutput) => builder.addInput(u.utxo, u.amount));
                         tx = builder
                             .addOutput(destination_key_pair.address, send_amount)
-                            .sign(sdk.TxType.Payment);
+                            .sign(sdk.OutputType.Payment, fee);
                         res.push(tx);
                         idx++
                     }
