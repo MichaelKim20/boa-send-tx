@@ -252,7 +252,7 @@ function makeBlock(): Promise<void>
     await prepare();
     WK.make();
     logger.info(`Started`);
-    await wait(3000);
+    await wait(20000);
     if (config.process.enable)
     {
         for (let idx = 0; idx < 100000; idx++)
