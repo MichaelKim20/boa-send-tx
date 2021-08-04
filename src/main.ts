@@ -41,11 +41,8 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
         try
         {
             // 제네시스 블럭 키의 UTXO를 가져온다.
-            if (sdk.JSBI.equal(height, sdk.JSBI.BigInt(0)))
+            if (!already_use_genesis_tx)
             {
-                if (already_use_genesis_tx)
-                    return resolve([]);
-
                 already_use_genesis_tx = true;
                 let res: sdk.Transaction[] = [];
                 let key_count = config.process.key_count;
