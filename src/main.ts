@@ -143,6 +143,7 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                 let res: sdk.Transaction[] = [];
                 let idx: number = 0;
                 let sources: Array<number> = [];
+                let MAX_DEST = 20;
                 while (idx < 1) {
                     let utxos: Array<sdk.UnspentTxOutput> = [];
                     let source = Math.floor(Math.random() * key_count);
@@ -157,10 +158,14 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                     if (utxos.length === 0)
                         continue;
 
-                    let destination = Math.floor(Math.random() * key_count);
-                    while (source === destination)
-                        destination = Math.floor(Math.random() * key_count);
-                    let destination_key_pair = WK.keys(destination);
+                    let destinations: Array<number> = [];
+                    for (let count = 0; count < MAX_DEST; count++)
+                    {
+                        let destination = Math.floor(Math.random() * key_count);
+                        while (source === destination)
+                            destination = Math.floor(Math.random() * key_count);
+                        destinations.push();
+                    }
 
                     let builder = new sdk.TxBuilder(source_key_pair);
                     let utxo_manager = new sdk.UTXOManager(utxos);
@@ -169,26 +174,34 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                     if (sdk.JSBI.lessThanOrEqual(sum, sdk.JSBI.BigInt(0)))
                         continue;
 
-                    let tx_sz = sdk.Transaction.getEstimatedNumberOfBytes(2, 2, 0);
+                    let tx_sz = sdk.Transaction.getEstimatedNumberOfBytes(2, MAX_DEST+1, 0);
                     let fees = await boa_client.getTransactionFee(tx_sz);
                     let fee = sdk.JSBI.BigInt(fees.medium);
 
-                    let range = sdk.JSBI.BigInt(Math.floor(Math.random() * 50) + 20);
+                    let range = sdk.JSBI.BigInt(Math.floor(Math.random() * 10) + 5);
                     let send_amount = sdk.JSBI.divide(sdk.JSBI.multiply(sum, range), sdk.JSBI.BigInt(100));
 
-                    logger.info(`Sender: ${source_key_pair.address.toString()}, Receiver: ${destination_key_pair.address.toString()}, amount: ${send_amount.toString()}`);
+                    let send_amt_each = sdk.JSBI.divide(send_amount, sdk.JSBI.BigInt(MAX_DEST));
+                    let remain = sdk.JSBI.subtract(send_amount, sdk.JSBI.multiply(send_amt_each, sdk.JSBI.BigInt(MAX_DEST)));
+
+                    logger.info(`Sender: ${source_key_pair.address.toString()}, amount: ${send_amount.toString()}`);
 
                     // Get UTXO for the amount to need.
                     let spent_utxos = utxo_manager.getUTXO(sdk.JSBI.add(send_amount, fee), height);
                     if (spent_utxos.length > 0) {
 
-                        tx_sz = sdk.Transaction.getEstimatedNumberOfBytes(spent_utxos.length, 2, 0);
+                        tx_sz = sdk.Transaction.getEstimatedNumberOfBytes(spent_utxos.length, MAX_DEST+1, 0);
                         fees = await boa_client.getTransactionFee(tx_sz);
                         fee = sdk.JSBI.BigInt(fees.medium);
 
                         spent_utxos.forEach((u: sdk.UnspentTxOutput) => builder.addInput(u.utxo, u.amount));
+                        destinations.forEach((m, index) => {
+                            if (index === MAX_DEST - 1)
+                                builder.addOutput(WK.keys(m).address, sdk.JSBI.add(send_amt_each, remain));
+                            else
+                            builder.addOutput(WK.keys(m).address, send_amt_each);
+                        })
                         tx = builder
-                            .addOutput(destination_key_pair.address, send_amount)
                             .sign(sdk.OutputType.Payment, fee);
                         res.push(tx);
                         idx++
@@ -248,8 +261,8 @@ function makeBlock(): Promise<void>
 (async () => {
     await prepare();
     WK.make();
-    logger.info(`Started`);
     await wait(20000);
+    logger.info(`Started`);
     if (config.process.enable)
     {
         for (let idx = 0; idx < 100000; idx++)
