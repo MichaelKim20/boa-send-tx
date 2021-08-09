@@ -164,7 +164,7 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                         let destination = Math.floor(Math.random() * key_count);
                         while (source === destination)
                             destination = Math.floor(Math.random() * key_count);
-                        destinations.push();
+                        destinations.push(destination);
                     }
 
                     let builder = new sdk.TxBuilder(source_key_pair);
