@@ -1,6 +1,8 @@
 import * as sdk from 'boa-sdk-ts';
 import { WK } from '../src/modules/utils/WK';
 import {BOASodium} from "boa-sodium-ts";
+import moment from "moment";
+import moment_tz from "moment-timezone";
 
 import * as assert from 'assert';
 
@@ -49,5 +51,14 @@ describe("Test2", () => {
         console.log(WK.NODE7().secret.toString(false));
         console.log(WK.NODE7().address.toString());
         console.log(WK.CommonsBudget().address.toString());
+    });
+});
+
+describe("Test3", () => {
+
+    it("Test 3", () => {
+        console.log(moment().utc());
+        console.log(moment_tz().utc());
+        console.log(new Date().getTime())
     });
 });

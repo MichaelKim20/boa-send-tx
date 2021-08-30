@@ -65,7 +65,7 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                     let fees = await boa_client.getTransactionFee(tx_sz);
                     let fee = sdk.JSBI.BigInt(fees.medium);
 
-                    let sum: sdk.JSBI = sdk.JSBI.subtract(utxos[idx].amount, fee);
+                    let sum: sdk.JSBI = sdk.JSBI.subtract(utxos[idx].amount.value, fee);
                     let amount = sdk.JSBI.divide(sum, sdk.JSBI.BigInt(tx_out_count));
                     let remain = sdk.JSBI.subtract(sum, sdk.JSBI.multiply(amount, sdk.JSBI.BigInt(tx_out_count)));
 
@@ -119,7 +119,7 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                     let fee = sdk.JSBI.BigInt(fees.medium);
 
                     let idx = utxos.length - 1;
-                    let sum: sdk.JSBI = sdk.JSBI.subtract(utxos[idx].amount, fee);
+                    let sum: sdk.JSBI = sdk.JSBI.subtract(utxos[idx].amount.value, fee);
                     let amount = sdk.JSBI.divide(sum, sdk.JSBI.BigInt(validators.length));
                     let remain = sdk.JSBI.subtract(sum, sdk.JSBI.multiply(amount, sdk.JSBI.BigInt(validators.length)));
                     let builder = new sdk.TxBuilder(WK.GenesisKey);
@@ -171,7 +171,7 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                     let utxo_manager = new sdk.UTXOManager(utxos);
 
                     let sum = utxo_manager.getSum()[0];
-                    if (sdk.JSBI.lessThanOrEqual(sum, sdk.JSBI.BigInt(0)))
+                    if (sdk.JSBI.lessThanOrEqual(sum.value, sdk.JSBI.BigInt(0)))
                         continue;
 
                     let tx_sz = sdk.Transaction.getEstimatedNumberOfBytes(2, MAX_DEST+1, 0);
@@ -179,7 +179,7 @@ function createTransaction (height: sdk.JSBI): Promise<sdk.Transaction[]>
                     let fee = sdk.JSBI.BigInt(fees.medium);
 
                     let range = sdk.JSBI.BigInt(Math.floor(Math.random() * 10) + 5);
-                    let send_amount = sdk.JSBI.divide(sdk.JSBI.multiply(sum, range), sdk.JSBI.BigInt(100));
+                    let send_amount = sdk.JSBI.divide(sdk.JSBI.multiply(sum.value, range), sdk.JSBI.BigInt(100));
 
                     let send_amt_each = sdk.JSBI.divide(send_amount, sdk.JSBI.BigInt(MAX_DEST));
                     let remain = sdk.JSBI.subtract(send_amount, sdk.JSBI.multiply(send_amt_each, sdk.JSBI.BigInt(MAX_DEST)));
